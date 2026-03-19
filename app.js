@@ -23,7 +23,7 @@ app.use(
   cors({
     //origin: "http://localhost:3000",
 
-    origin: ["https://back2u-frontend.vercel.app/"],
+    origin: ["https://back2u-frontend.vercel.app"],
     credentials: true,
   }),
 );
