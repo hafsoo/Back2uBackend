@@ -5,7 +5,8 @@ const cloudinary = require("cloudinary");
 const ErrorHandler = require("../utils/ErrorHandler");
 const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const jwt = require("jsonwebtoken");
-const sendMail = require("../utils/sendMail");
+//const sendMail = require("../utils/sendMail");
+const sendEmail = require("../utils/sendEmail");
 const sendToken = require("../utils/jwtToken");
 const { isAuthenticated, isAdmin } = require("../middleware/auth");
 
@@ -39,7 +40,7 @@ if (avatar) {
       name: name,
       email: email,
       password: password,
-      avatar: {
+     avatar: {
         public_id: myCloud.public_id,
         url: myCloud.secure_url,
       },
@@ -52,7 +53,7 @@ const activationUrl = `https://back2u-frontend.vercel.app/activation/${activatio
 
 
     try {
-      await sendMail({
+      await sendEmail({
         email: user.email,
         subject: "Activate your account",
         message: `Hello ${user.name}, please click on the link to activate your account: ${activationUrl}`,
