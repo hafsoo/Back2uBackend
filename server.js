@@ -1,7 +1,7 @@
-//if (process.env.NODE_ENV !== "PRODUCTION") {
- // require("dotenv").config({ path: "config/.env" });
-//}
-require("dotenv").config({ path: "./config/.env" });
+if (process.env.NODE_ENV !== "PRODUCTION") {
+  require("dotenv").config({ path: "config/.env" });
+}
+
 // 👇 ADD HERE
 console.log("SMTP USER:", process.env.SMTP_USER);
 console.log("SMTP PASS:", process.env.SMTP_PASS);
