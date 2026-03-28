@@ -47,7 +47,7 @@ if (avatar) {
 
     const activationToken = createActivationToken(user);
 
-  // const activationUrl = `http://localhost:3000/activation/${activationToken}`;
+//   const activationUrl = `http://localhost:3000/activation/${activationToken}`;
 const activationUrl = `https://back2u-frontend.vercel.app/activation/${activationToken}`;
 
 
