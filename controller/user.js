@@ -12,6 +12,8 @@ const { isAuthenticated, isAdmin } = require("../middleware/auth");
 // create user
 router.post("/create-user", async (req, res, next) => {
   try {
+    console.log("REQ BODY:", req.body);
+
     const { name, email, password, avatar } = req.body;
     const userEmail = await User.findOne({ email });
 
@@ -19,9 +21,19 @@ router.post("/create-user", async (req, res, next) => {
       return next(new ErrorHandler("User already exists", 400));
     }
 
-    const myCloud = await cloudinary.v2.uploader.upload(avatar, {
-      folder: "avatars",
-    });
+   // const myCloud = await cloudinary.v2.uploader.upload(avatar, {
+     // folder: "avatars",
+    //});
+    let myCloud = {
+  public_id: "",
+  secure_url: "",
+};
+
+if (avatar) {
+  myCloud = await cloudinary.v2.uploader.upload(avatar, {
+    folder: "avatars",
+  });
+}
 
     const user = {
       name: name,
@@ -53,6 +65,7 @@ const activationUrl = `https://back2u-frontend.vercel.app/activation/${activatio
       return next(new ErrorHandler(error.message, 500));
     }
   } catch (error) {
+     console.log(error); // 👈 ADD THIS
     return next(new ErrorHandler(error.message, 400));
   }
 });
