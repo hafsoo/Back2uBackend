@@ -46,7 +46,7 @@ const activationUrl = `https://back2u-frontend.vercel.app/activation/${activatio
  
     try {
      
-      sendEmail({
+      await sendEmail({
         to: user.email,
        // email: user.email,
         subject: "Activate your account",
