@@ -22,9 +22,19 @@ router.post("/create-user", async (req, res, next) => {
       return next(new ErrorHandler("User already exists", 400));
     }
 
-    const myCloud = await cloudinary.v2.uploader.upload(avatar, {
-      folder: "avatars",
-    });
+
+    let myCloud;
+try {
+  myCloud = await cloudinary.v2.uploader.upload(avatar, {
+    folder: "avatars",
+  });
+} catch (err) {
+  console.log("Cloudinary error:", err);
+  return next(new ErrorHandler("Image upload failed", 500));
+}
+    //const myCloud = await cloudinary.v2.uploader.upload(avatar, {
+      //folder: "avatars",
+    //});
    
 
     const user = {
@@ -48,7 +58,7 @@ const activationUrl = `https://back2u-frontend.vercel.app/activation/${activatio
  
     try {
      
-      await sendEmail({
+      sendEmail({
         to: user.email,
        // email: user.email,
         subject: "Activate your account",
@@ -66,6 +76,7 @@ const activationUrl = `https://back2u-frontend.vercel.app/activation/${activatio
   } 
   catch (error) {
      console.log(error); // 👈 ADD THIS
+     console.error("FULL ERROR:", error);
     return next(new ErrorHandler(error.message, 400));
   }
 });
