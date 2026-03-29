@@ -21,12 +21,18 @@ router.post("/create-user", async (req, res, next) => {
     if (userEmail) {
       return next(new ErrorHandler("User already exists", 400));
     }
+// ✅ ADD HERE
+if (!avatar || avatar.length < 1000) {
+  return next(new ErrorHandler("Invalid avatar image", 400));
+}
 
+// ✅ THEN CLOUDINARY
+let myCloud;
 
-    let myCloud;
-try {
+ try {
   myCloud = await cloudinary.v2.uploader.upload(avatar, {
     folder: "avatars",
+    timeout: 60000, // IMPORTANT for Render
   });
 } catch (err) {
   console.log("Cloudinary error:", err);
@@ -58,13 +64,20 @@ const activationUrl = `https://back2u-frontend.vercel.app/activation/${activatio
  
     try {
      
-      sendEmail({
+      {/*sendEmail({
         to: user.email,
        // email: user.email,
         subject: "Activate your account",
          text: `Hello ${user.name}, please click on the link to activate your account: ${activationUrl}`
         //message: `Hello ${user.name}, please click on the link to activate your account: ${activationUrl}`,
-      });
+      });*/}
+      sendEmail({
+  to: user.email,
+  subject: "Activate your account",
+  text: `Hello ${user.name}, please click on the link to activate your account: ${activationUrl}`
+}).catch((err) => {
+  console.log("Email error (non-blocking):", err);
+});
       res.status(201).json({
         success: true,
         message: `please check your email:- ${user.email} to activate your account!`,
