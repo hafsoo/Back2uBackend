@@ -22,19 +22,10 @@ router.post("/create-user", async (req, res, next) => {
       return next(new ErrorHandler("User already exists", 400));
     }
 
-   // const myCloud = await cloudinary.v2.uploader.upload(avatar, {
-     // folder: "avatars",
-    //});
-    let myCloud = {
-  public_id: "",
-  secure_url: "",
-};
-
-if (avatar) {
-  myCloud = await cloudinary.v2.uploader.upload(avatar, {
-    folder: "avatars",
-  });
-}
+    const myCloud = await cloudinary.v2.uploader.upload(avatar, {
+      folder: "avatars",
+    });
+   
 
     const user = {
       name: name,
@@ -47,29 +38,37 @@ if (avatar) {
     };
 
     const activationToken = createActivationToken(user);
+   
 
 // const activationUrl = `http://localhost:3000/activation/${activationToken}`;
 const activationUrl = `https://back2u-frontend.vercel.app/activation/${activationToken}`;
 
 
+ 
     try {
+     
       await sendEmail({
-        email: user.email,
+        to: user.email,
+       // email: user.email,
         subject: "Activate your account",
-        message: `Hello ${user.name}, please click on the link to activate your account: ${activationUrl}`,
+         text: `Hello ${user.name}, please click on the link to activate your account: ${activationUrl}`
+        //message: `Hello ${user.name}, please click on the link to activate your account: ${activationUrl}`,
       });
       res.status(201).json({
         success: true,
         message: `please check your email:- ${user.email} to activate your account!`,
       });
-    } catch (error) {
+    }
+     catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  } catch (error) {
+  } 
+  catch (error) {
      console.log(error); // 👈 ADD THIS
     return next(new ErrorHandler(error.message, 400));
   }
 });
+
 
 // create activation token
 const createActivationToken = (user) => {

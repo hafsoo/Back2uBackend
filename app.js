@@ -13,14 +13,14 @@ const app = express();
 
 app.use(cookieParser());
 
-app.use(express.json({ limit: "50mb" }));
-app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
+app.use(express.json({ limit: "20mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "20mb" }));
 
 // Enable CORS for frontend
 app.use(
   cors({
    //origin: "http://localhost:3000",
-    origin: ["https://back2u-frontend.vercel.app"],
+   origin: ["https://back2u-frontend.vercel.app"],
     credentials: true,
   }),
 );
