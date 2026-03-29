@@ -34,7 +34,7 @@ module.exports = sendEmail;
 
  */}
 
- const nodemailer = require("nodemailer");
+const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
