@@ -20,6 +20,7 @@ app.use(
   // origin: "http://localhost:3000",
    origin: ["https://back2u-frontend.vercel.app"],
     credentials: true,
+ 
   }),
 );
 // Health check
