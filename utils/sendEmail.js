@@ -33,21 +33,27 @@ const sendEmail = async ({ to, subject, text, html }) => {
 module.exports = sendEmail;
 
  */}
- const { Resend } = require("resend");
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+ const nodemailer = require("nodemailer");
+
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT),
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 
 const sendEmail = async ({ to, subject, text, html }) => {
-  const { data, error } = await resend.emails.send({
-    from: process.env.EMAIL_FROM,  // e.g. "Back2U <onboarding@resend.dev>"
+  return transporter.sendMail({
+    from: process.env.EMAIL_FROM,
     to,
     subject,
     text,
     html,
   });
-
-  if (error) throw new Error(error.message);
-  return data;
 };
 
 module.exports = sendEmail;
