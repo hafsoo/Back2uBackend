@@ -2,8 +2,6 @@
 if (process.env.NODE_ENV !== "PRODUCTION") {
   require("dotenv").config({ path: "config/.env" });
 }
-
-
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
@@ -19,7 +17,7 @@ app.use(bodyParser.urlencoded({ extended: true, limit: "20mb" }));
 // Enable CORS for frontend
 app.use(
   cors({
-   //origin: "http://localhost:3000",
+  // origin: "http://localhost:3000",
    origin: ["https://back2u-frontend.vercel.app"],
     credentials: true,
   }),
