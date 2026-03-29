@@ -1,6 +1,6 @@
 //final or new soln
 
-    const nodemailer = require("nodemailer");
+  {/*  const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -32,4 +32,22 @@ const sendEmail = async ({ to, subject, text, html }) => {
 
 module.exports = sendEmail;
 
- 
+ */}
+ const { Resend } = require("resend");
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+const sendEmail = async ({ to, subject, text, html }) => {
+  const { data, error } = await resend.emails.send({
+    from: process.env.EMAIL_FROM,  // e.g. "Back2U <onboarding@resend.dev>"
+    to,
+    subject,
+    text,
+    html,
+  });
+
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+module.exports = sendEmail;
