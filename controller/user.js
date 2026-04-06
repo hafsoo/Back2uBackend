@@ -238,13 +238,15 @@ router.put(
   })
 );
 
-// update user avatar
+// update user avatar for optional imag
+{/** 
 router.put(
   "/update-avatar",
   isAuthenticated,
   catchAsyncErrors(async (req, res, next) => {
     try {
       let existsUser = await User.findById(req.user.id);
+
       if (req.body.avatar !== "") {
         const imageId = existsUser.avatar.public_id;
 
@@ -272,7 +274,52 @@ router.put(
     }
   })
 );
+*/}
+router.put(
+  "/update-avatar",
+  isAuthenticated,
+  catchAsyncErrors(async (req, res, next) => {
+    try {
+      let existsUser = await User.findById(req.user.id);
 
+      // ❌ no image sent
+      if (!req.body.avatar) {
+        return next(new ErrorHandler("Please provide an image", 400));
+      }
+
+      // ✅ delete old image ONLY if exists
+      if (
+        existsUser.avatar &&
+        existsUser.avatar.public_id &&
+        existsUser.avatar.public_id !== ""
+      ) {
+        await cloudinary.v2.uploader.destroy(
+          existsUser.avatar.public_id
+        );
+      }
+
+      // ✅ upload new image
+      const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
+        folder: "avatars",
+        width: 150,
+      });
+
+      existsUser.avatar = {
+        public_id: myCloud.public_id,
+        url: myCloud.secure_url,
+      };
+
+      await existsUser.save();
+
+      res.status(200).json({
+        success: true,
+        user: existsUser,
+      });
+    } catch (error) {
+      return next(new ErrorHandler(error.message, 500));
+    }
+  })
+);
 // update user addresses
 router.put(
   "/update-user-addresses",
