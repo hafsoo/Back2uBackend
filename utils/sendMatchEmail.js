@@ -1,4 +1,4 @@
-const nodemailer = require("nodemailer");
+const sendEmail = require("./sendEmail"); // reuse existing transporter
 
 const sendMatchEmail = async ({
   to,
@@ -8,21 +8,6 @@ const sendMatchEmail = async ({
   score,
   foundItemId,
 }) => {
-
-  // Debug — confirm values are loading
-  //console.log("📧 SMTP USER:", process.env.SMTP_USER);
-  //console.log("📧 SMTP PASS:", process.env.SMTP_PASS ? "loaded" : "MISSING");
-
-  const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-
   const viewLink = `https://back2u-frontend.vercel.app/lost-found/${foundItemId}`;
 
   const html = `
@@ -50,13 +35,12 @@ const sendMatchEmail = async ({
         View Matched Item
       </a>
       <p style="margin-top:24px; color:#999; font-size:12px;">
-        If this is not your item, ignore this email.<br/>— Lost & Found System
+        If this is not your item, ignore this email.<br/>— Back2U System
       </p>
     </div>
   `;
 
-  await transporter.sendMail({
-    from: `"Back2U" <${process.env.SMTP_USER}>`,
+  await sendEmail({
     to,
     subject: `🔍 Match found for your lost item: "${lostItemName}"`,
     html,
