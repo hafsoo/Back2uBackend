@@ -139,15 +139,20 @@ router.post(
       //db save
       const lostItem = await LostItem.create(lostItemData);
 
-      // ✅ ADD THIS — runs in background, doesn't slow response
-      notifyFoundUsersOnNewLost(lostItem).catch(console.error);
+      // ✅ ADD THIS — runs in background, doesn't slow response vercel issue
+      //notifyFoundUsersOnNewLost(lostItem).catch(console.error);
 
       // auto-match score base
-      const possibleMatches = await matchLostWithFound(
-        lostItem.tags,
-        lostItem.category,
-        lostItem,
-      );
+      //const possibleMatches = await matchLostWithFound(
+      //lostItem.tags,
+      //lostItem.category,
+      //lostItem,
+      //);
+
+      const [possibleMatches] = await Promise.all([
+        matchLostWithFound(lostItem.tags, lostItem.category, lostItem),
+        notifyFoundUsersOnNewLost(lostItem),
+      ]);
 
       res.status(201).json({
         success: true,
