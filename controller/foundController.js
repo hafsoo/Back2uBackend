@@ -16,6 +16,7 @@ const { generateEmbedding } = require("../utils/generateEmbedding");
 //const detectLabels = require("../utils/geminiVision");
 //const detectLabels = require("../utils/clarifaiVision");
 //const normalizeTags = require("../utils/tagNormalizer");
+const { notifyLostUsersOnNewFound } = require("../utils/notifyMatchedUsers");
 
 // 🟢 Report Found Item (require auth so req.user exists)
 router.post(
@@ -124,28 +125,26 @@ router.post(
       // 4️⃣ Normalize & remove duplicates
       foundItemData.tags = normalizeTags(allTags, foundItemData.category);
 
-
       // 🔥 Generate semantic embedding from tags + description
-const embeddingText =
-  foundItemData.tags.join(" ") + " " + (foundItemData.description || "");
+      const embeddingText =
+        foundItemData.tags.join(" ") + " " + (foundItemData.description || "");
 
-try {
-  const embedding = await generateEmbedding(embeddingText);
-  foundItemData.embedding = embedding;
-} catch (err) {
-  console.error("❌ Embedding Error:", err.message);
-  foundItemData.embedding = [];
-}
-
-
+      try {
+        const embedding = await generateEmbedding(embeddingText);
+        foundItemData.embedding = embedding;
+      } catch (err) {
+        console.error("❌ Embedding Error:", err.message);
+        foundItemData.embedding = [];
+      }
 
       const foundItem = await FoundItem.create(foundItemData);
+      // ✅ ADD THIS — runs in background, doesn't slow response
+      notifyLostUsersOnNewFound(foundItem).catch(console.error);
 
       // auto-match
       const possibleMatches = await matchFoundWithLost(
         foundItem.tags,
         foundItem.category,
-        //new
         foundItem,
       );
 
@@ -154,11 +153,6 @@ try {
         foundItem,
         possibleMatches,
       });
-
-      //  res.status(201).json({
-      //  success: true,
-      //foundItem,
-      //});
     } catch (error) {
       return next(new ErrorHandler(error.message, 400));
     }

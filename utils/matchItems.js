@@ -138,7 +138,7 @@ async function matchLostWithFound(tags, category, lostItemData = {}) {
       });
 
       // 🔥 Minimum threshold (important!)
-      if (scoreObj.hybridScore < 0.4) return null;
+      if (scoreObj.hybridScore < 0.5 || scoreObj.embeddingSim < 0.55) return null;
 
       const matchPercentage = Math.round(scoreObj.hybridScore * 100);
 
@@ -167,7 +167,7 @@ async function matchFoundWithLost(tags, category, foundItemData = {}) {
         inputData: foundItemData,
       });
 
-      if (scoreObj.hybridScore < 0.4) return null;
+      if (scoreObj.hybridScore < 0.5 || scoreObj.embeddingSim < 0.55) return null;
 
       const matchPercentage = Math.round(scoreObj.hybridScore * 100);
 

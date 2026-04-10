@@ -2,9 +2,7 @@ if (process.env.NODE_ENV !== "PRODUCTION") {
   require("dotenv").config({ path: "config/.env" });
 }
 
-// 👇 ADD HERE
-console.log("SMTP USER:", process.env.SMTP_USER);
-console.log("SMTP PASS:", process.env.SMTP_PASS);
+
 const app = require("./app");
 const connectDatabase = require("./db/Database");
 const cloudinary = require("cloudinary").v2;
@@ -33,7 +31,7 @@ connectDatabase().then(() => {
     console.log(`🚀 Server running on port ${PORT}`);
   });
 });
-console.log("ACTIVATION_SECRET:", process.env.ACTIVATION_SECRET);
+
 
 // ⚠ Handle unhandled promise rejections
 process.on("unhandledRejection", (err) => {
