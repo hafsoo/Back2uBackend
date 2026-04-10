@@ -61,7 +61,7 @@ router.post(
     if (itemType === "FoundItem") {
       const finder = await User.findById(item.reportedBy);
       if (finder) {
-        // in-app
+        //APP
         await Notification.create({
           userId: finder._id,
           title: "New claim on your found item",
@@ -75,12 +75,12 @@ router.post(
 
         // email (best-effort)
         if (finder.email) {
-          sendEmail({
+         await sendEmail({
             to: finder.email,
             subject: "Someone claimed your found item",
             text: `${req.user.name || "Someone"} submitted a claim on your found item: ${item.itemName || ""}. Log in to review.`,
             html: `<p><strong>${req.user.name || "Someone"}</strong> submitted a claim on your found item: <strong>${item.itemName || ""}</strong>.</p><p>Open your Incoming Claims on Back2U to review.</p>`,
-          }).catch((e) => console.error("Email send error:", e));
+          })
         }
       }
     }
@@ -189,6 +189,7 @@ router.put(
     // notify claimant
     const claimant = await User.findById(claim.claimant);
     if (claimant) {
+      //app
       await Notification.create({
         userId: claimant._id,
         title: "Finder approved your claim",
@@ -198,12 +199,13 @@ router.put(
 
       // email claimant (best-effort)
       if (claimant.email) {
-        sendEmail({
+        await sendEmail({
           to: claimant.email,
           subject: "Finder approved your claim — awaiting admin",
           text: `The finder approved your claim on "${item.itemName || "item"}". An admin will verify and finalize the return.`,
           html: `<p>The finder approved your claim on <b>${item.itemName || "item"}</b>. An admin will now verify and finalize the return.</p>`,
-        }).catch((e) => console.error("Email send error:", e));
+        })
+        //.catch((e) => console.error("Email send error:", e));
       }
     }
 
@@ -218,12 +220,13 @@ router.put(
       });
 
       if (admin.email) {
-        sendEmail({
+       await sendEmail({
           to: admin.email,
           subject: "Claim awaiting admin review",
           text: `A claim is awaiting admin review for "${item.itemName || "item"}".`,
           html: `<p>A claim requires your review for <b>${item.itemName || "item"}</b>.</p>`,
-        }).catch((e) => console.error("Email send error:", e));
+        })
+        //.catch((e) => console.error("Email send error:", e));
       }
     }
 
@@ -272,12 +275,13 @@ router.put(
       });
 
       if (claimant.email) {
-        sendEmail({
+       await sendEmail({
           to: claimant.email,
           subject: "Your claim was rejected by the finder",
           text: `Your claim on "${item.itemName || "item"}" was rejected by the finder.`,
           html: `<p>Your claim on <b>${item.itemName || "item"}</b> was rejected by the finder.</p>`,
-        }).catch((e) => console.error("Email send error:", e));
+        })
+        //.catch((e) => console.error("Email send error:", e));
       }
     }
 
@@ -340,12 +344,13 @@ router.put(
         data: { claimId: claim._id },
       });
       if (user.email) {
-        sendEmail({
+       await sendEmail({
           to: user.email,
           subject,
           text: body,
           html: `<p>${body}</p>`,
-        }).catch((e) => console.error("Email send error:", e));
+        })
+        //.catch((e) => console.error("Email send error:", e));
       }
     };
 
