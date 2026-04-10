@@ -56,7 +56,7 @@ const sendMatchEmail = async ({
   `;
 
   await transporter.sendMail({
-    from: `"Lost & Found System" <${process.env.SMTP_MAIL}>`,
+    from: `"Back2U" <${process.env.SMTP_MAIL}>`,
     to,
     subject: `🔍 Match found for your lost item: "${lostItemName}"`,
     html,
