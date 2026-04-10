@@ -15,7 +15,7 @@ const sendMatchEmail = async ({
 
   const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
-    port: 587,
+    port: 465,
     secure: false,
     auth: {
       user: process.env.SMTP_USER,
@@ -56,7 +56,7 @@ const sendMatchEmail = async ({
   `;
 
   await transporter.sendMail({
-    from: `"Back2U" <${process.env.SMTP_MAIL}>`,
+    from: `"Back2U" <${process.env.SMTP_USER}>`,
     to,
     subject: `🔍 Match found for your lost item: "${lostItemName}"`,
     html,
