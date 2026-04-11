@@ -148,10 +148,20 @@ router.post(
       //foundItem,
       //);
       // Run both together before sending response (required for Vercel)
-      const [possibleMatches] = await Promise.all([
-        matchFoundWithLost(foundItem.tags, foundItem.category, foundItem),
-        notifyLostUsersOnNewFound(foundItem),
-      ]);
+
+      //abhi
+      //const [possibleMatches] = await Promise.all([
+      //matchFoundWithLost(foundItem.tags, foundItem.category, foundItem),
+      //notifyLostUsersOnNewFound(foundItem),
+      //]);
+
+      const possibleMatches = await matchFoundWithLost(
+        foundItem.tags,
+        foundItem.category,
+        foundItem,
+      );
+
+      notifyLostUsersOnNewFound(foundItem).catch(console.error);
 
       res.status(201).json({
         success: true,

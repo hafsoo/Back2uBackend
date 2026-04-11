@@ -148,22 +148,25 @@ router.post(
       //lostItem.category,
       //lostItem,
       //);
+      //abhi comment kia
 
-      const [possibleMatches] = await Promise.all([
-        matchLostWithFound(lostItem.tags, lostItem.category, lostItem),
-        notifyFoundUsersOnNewLost(lostItem),
-      ]);
+      //const [possibleMatches] = await Promise.all([
+      //matchLostWithFound(lostItem.tags, lostItem.category, lostItem),
+      //notifyFoundUsersOnNewLost(lostItem),
+      //]);
+      const possibleMatches = await matchLostWithFound(
+        lostItem.tags,
+        lostItem.category,
+        lostItem,
+      );
+
+      notifyFoundUsersOnNewLost(lostItem).catch(console.error);
 
       res.status(201).json({
         success: true,
         lostItem,
         possibleMatches,
       });
-
-      // res.status(201).json({
-      // success: true,
-      //lostItem,
-      //});
     } catch (error) {
       return next(new ErrorHandler(error.message, 400));
     }
