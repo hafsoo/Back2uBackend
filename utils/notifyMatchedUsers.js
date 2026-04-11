@@ -4,8 +4,8 @@ const MatchNotification = require("../model/MatchNotification");
 const sendMatchEmail = require("./sendMatchEmail");
 const { matchLostWithFound, matchFoundWithLost } = require("./matchItems");
 
-const SCORE_THRESHOLD = 0.3;
-
+//const SCORE_THRESHOLD = 0.3;
+const SCORE_THRESHOLD = 0.55;
 // Called when NEW Found item posted → notify lost item owners
 async function notifyLostUsersOnNewFound(foundItem) {
   try {
@@ -35,8 +35,8 @@ async function notifyLostUsersOnNewFound(foundItem) {
 
       if (!thisMatch) continue;
       if (thisMatch.hybridScore < SCORE_THRESHOLD) continue;
-      if (thisMatch.embeddingSim < 0.2) continue;
-
+     // if (thisMatch.embeddingSim < 0.2) continue;
+if (thisMatch.embeddingSim < 0.45) continue;
       const alreadyNotified = await MatchNotification.findOne({
         lostItemId: lostItem._id,
         foundItemId: foundItem._id,
@@ -97,8 +97,8 @@ async function notifyFoundUsersOnNewLost(lostItem) {
 
       if (!thisMatch) continue;
       if (thisMatch.hybridScore < SCORE_THRESHOLD) continue;
-      if (thisMatch.embeddingSim < 0.2) continue;
-
+      //if (thisMatch.embeddingSim < 0.2) continue;
+if (thisMatch.embeddingSim < 0.45) continue;
       const alreadyNotified = await MatchNotification.findOne({
         lostItemId: lostItem._id,
         foundItemId: foundItem._id,
