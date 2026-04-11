@@ -167,7 +167,7 @@ async function matchFoundWithLost(tags, category, foundItemData = {}) {
         inputData: foundItemData,
       });
 
-      if (scoreObj.hybridScore < 0.65 || scoreObj.embeddingSim < 0.65) return null;
+      if (scoreObj.hybridScore < 0.55 || scoreObj.embeddingSim < 0.55) return null;
 
       const matchPercentage = Math.round(scoreObj.hybridScore * 100);
 
