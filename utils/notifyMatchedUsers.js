@@ -73,6 +73,7 @@ if (thisMatch.embeddingSim < 0.45) continue;
 // Called when NEW Lost item posted → notify found item reporters
 async function notifyFoundUsersOnNewLost(lostItem) {
   try {
+    //just old 30 days reports ko email jaya gi
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const foundItems = await FoundItem.find({
       status: "found",
