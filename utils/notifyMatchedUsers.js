@@ -9,9 +9,11 @@ const SCORE_THRESHOLD = 0.55;
 // Called when NEW Found item posted → notify lost item owners
 async function notifyLostUsersOnNewFound(foundItem) {
   try {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const lostItems = await LostItem.find({
       status: "lost",
       category: foundItem.category,
+      createdAt: { $gte: thirtyDaysAgo },
     }).populate("reportedBy", "name email");
 
     console.log(`🔍 Filtered lost items: ${lostItems.length}`);
@@ -71,9 +73,11 @@ if (thisMatch.embeddingSim < 0.45) continue;
 // Called when NEW Lost item posted → notify found item reporters
 async function notifyFoundUsersOnNewLost(lostItem) {
   try {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const foundItems = await FoundItem.find({
       status: "found",
       category: lostItem.category,
+       createdAt: { $gte: thirtyDaysAgo },
     }).populate("reportedBy", "name email");
 
     console.log(`🔍 Filtered found items: ${foundItems.length}`);
