@@ -9,7 +9,7 @@ const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail");
 const sendToken = require("../utils/jwtToken");
 const { isAuthenticated, isAdmin } = require("../middleware/auth");
-
+const crypto = require("crypto"); //for forget password build in node package genertae hashong,tokens,encryption
 // create user
 router.post("/create-user", async (req, res, next) => {
   try {
@@ -487,5 +487,87 @@ router.delete(
     }
   })
 );
+
+
+// forgot password — send reset email
+router.post(
+  "/forgot-password",
+  catchAsyncErrors(async (req, res, next) => {
+    const user = await User.findOne({ email: req.body.email });
+
+    if (!user) {
+      return next(new ErrorHandler("User with this email doesn't exist", 404));
+    }
+
+    // Generate token
+    const resetToken = crypto.randomBytes(20).toString("hex");
+
+    // Save hashed token + expiry to DB
+    user.resetPasswordToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    user.resetPasswordTime = Date.now() + 15 * 60 * 1000; // 15 minutes
+
+    await user.save({ validateBeforeSave: false });
+
+    //const resetUrl = `http://localhost:3000/reset-password/${resetToken}`;
+    const resetUrl = `https://back2u-frontend.vercel.app/reset-password/${resetToken}`;
+
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: "Back2U Password Reset",
+        text: `Hello ${user.name},\n\nClick the link below to reset your password:\n\n${resetUrl}\n\nThis link expires in 15 minutes.\n\nIf you didn't request this, ignore this email.`,
+      });
+
+      res.status(200).json({
+        success: true,
+        message: `Reset link sent to ${user.email}`,
+      });
+    } catch (error) {
+      // Clear token if email fails
+      user.resetPasswordToken = undefined;
+      user.resetPasswordTime = undefined;
+      await user.save({ validateBeforeSave: false });
+      return next(new ErrorHandler(error.message, 500));
+    }
+  })
+);
+
+// reset password — set new password
+router.put(
+  "/reset-password/:token",
+  catchAsyncErrors(async (req, res, next) => {
+    // Hash the URL token to compare with DB
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(req.params.token)
+      .digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordTime: { $gt: Date.now() }, // not expired
+    });
+
+    if (!user) {
+      return next(new ErrorHandler("Reset link is invalid or has expired", 400));
+    }
+
+    user.password = req.body.password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordTime = undefined;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password reset successful! Please login.",
+    });
+  })
+);
+
+
 
 module.exports = router;
