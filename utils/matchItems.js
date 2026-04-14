@@ -83,6 +83,7 @@ function computeHybridScore({ item, inputData }) {
     else if (diff <= 3) dateScore = 0.7;
     else if (diff <= 7) dateScore = 0.4;
     else if (diff <= 14) dateScore = 0.2;
+    else if (diff <= 30) dateScore = 0.1;
     else dateScore = 0;
   }
 
