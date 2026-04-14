@@ -90,15 +90,17 @@ function computeHybridScore({ item, inputData }) {
   // ==============================
   // 5️⃣ Image Score (0 or 1)
   // ==============================
-  const imageScore =
-    inputData.images?.length > 0 && item.images?.length > 0 ? 1 : 0;
-
+  //const imageScore =inputData.images?.length > 0 && item.images?.length > 0 ? 1 : 0;
+  //new if both side image then 1
+const imageScore =inputData.images?.length > 0 && item.images?.length > 0 ? 1 : 0.5;
   // ==============================
   // 6️⃣ WEIGHTS (Sum = 1)
   // ==============================
   const weights = {
-    embedding: 0.6,
-    tag: 0.2,
+    embedding: 0.55,  // still dominant
+  tag: 0.25,        // bump up tags
+    //embedding: 0.6,
+    //tag: 0.2,
     location: 0.1,
     date: 0.05,
     image: 0.05,
@@ -140,7 +142,7 @@ async function matchLostWithFound(tags, category, lostItemData = {}) {
 
       // 🔥 Minimum threshold (important!)
       //if (scoreObj.hybridScore < 0.65 || scoreObj.embeddingSim < 0.65) return null;
-      if (scoreObj.hybridScore < 0.55 || scoreObj.embeddingSim < 0.55) return null;
+      if (scoreObj.hybridScore < 0.50 || scoreObj.embeddingSim < 0.50) return null;
       const matchPercentage = Math.round(scoreObj.hybridScore * 100);
 
       return {
@@ -168,7 +170,7 @@ async function matchFoundWithLost(tags, category, foundItemData = {}) {
         inputData: foundItemData,
       });
 
-      if (scoreObj.hybridScore < 0.55 || scoreObj.embeddingSim < 0.55) return null;
+      if (scoreObj.hybridScore < 0.50 || scoreObj.embeddingSim < 0.50) return null;
 
       const matchPercentage = Math.round(scoreObj.hybridScore * 100);
 
