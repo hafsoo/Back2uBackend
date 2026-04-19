@@ -458,7 +458,7 @@ router.get(
 );
 
 // delete users --- admin
-router.delete(
+/*router.delete(
   "/delete-user/:id",
   isAuthenticated,
   isAdmin("Admin"),
@@ -487,7 +487,40 @@ router.delete(
     }
   })
 );
+*/
+router.delete(
+  "/delete-user/:id",
+  isAuthenticated,
+  isAdmin("Admin"),
+  catchAsyncErrors(async (req, res, next) => {
+    try {
+      const user = await User.findById(req.params.id);
 
+      if (!user) {
+        return next(
+          new ErrorHandler("User is not available with this id", 400)
+        );
+      }
+
+      // ✅ SAFE avatar delete
+      if (user.avatar && user.avatar.public_id) {
+        await cloudinary.v2.uploader.destroy(user.avatar.public_id);
+      }
+
+      // ✅ delete user
+      await User.findByIdAndDelete(req.params.id);
+
+      res.status(200).json({
+        success: true,
+        message: "User deleted successfully!",
+      });
+
+    } catch (error) {
+      console.error("DELETE USER ERROR:", error); // 🔥 add this
+      return next(new ErrorHandler(error.message, 500));
+    }
+  })
+);
 
 // forgot password — send reset email
 router.post(
