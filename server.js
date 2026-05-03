@@ -1,19 +1,15 @@
 if (process.env.NODE_ENV !== "PRODUCTION") {
   require("dotenv").config({ path: "config/.env" });
 }
-
 const app = require("./app");
 const connectDatabase = require("./db/Database");
 const cloudinary = require("cloudinary").v2;
-
 // 🔴 Handle uncaught exceptions
 process.on("uncaughtException", (err) => {
   console.log(`❌ Uncaught Exception: ${err.message}`);
   console.log("Shutting down due to uncaught exception...");
   process.exit(1);
 });
-
-
 // ✅ Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
@@ -30,8 +26,6 @@ connectDatabase().then(() => {
     console.log(`🚀 Server running on port ${PORT}`);
   });
 });
-
-
 // ⚠ Handle unhandled promise rejections
 process.on("unhandledRejection", (err) => {
   console.log(`❌ Unhandled Promise Rejection: ${err.message}`);
