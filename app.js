@@ -23,6 +23,10 @@ app.use(
  
   }),
 );
+// ✅ Root route fix
+app.get("/", (req, res) => {
+  res.json({ success: true, message: "✅ Back2U Backend API is running!" });
+});
 // Health check
 app.get("/test", (req, res) => {
   res.send("✅ Backend server is running");
