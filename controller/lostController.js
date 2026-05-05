@@ -160,8 +160,8 @@ router.post(
         lostItem,
       );
 
-      await notifyFoundUsersOnNewLost(lostItem).catch(console.error);
-
+      //await notifyFoundUsersOnNewLost(lostItem).catch(console.error);
+       await notifyFoundUsersOnNewLost(lostItem,possibleMatches).catch(console.error);
       res.status(201).json({
         success: true,
         lostItem,

@@ -4,9 +4,133 @@ const MatchNotification = require("../model/MatchNotification");
 const sendMatchEmail = require("./sendMatchEmail");
 const { matchLostWithFound, matchFoundWithLost } = require("./matchItems");
 
-//const SCORE_THRESHOLD = 0.3;
 const SCORE_THRESHOLD = 0.55;
-// Called when NEW Found item posted → notify lost item owners
+
+const normalizeScore = (score) => {
+  if (!score) return 0;
+  return Math.round(score * 100);
+};
+
+// ✅ Called when NEW Found item posted → notify lost item owners
+async function notifyLostUsersOnNewFound(foundItem, precomputedMatches = null) {
+  try {
+    let allMatches = precomputedMatches; // ✅ Route se aaye matches use karo
+
+    // Sirf tab recalculate karo jab matches na aaye
+    if (!allMatches) {
+      allMatches = await matchFoundWithLost(
+        foundItem.tags,
+        foundItem.category,
+        foundItem
+      );
+    }
+
+    for (const match of allMatches) {
+      const lostItem = match.item;
+      const score = match.hybridScore;
+
+      if (score < SCORE_THRESHOLD) continue;
+      if (match.embeddingSim < 0.45) continue;
+
+      // populate karo agar email nahi hai
+      if (!lostItem.reportedBy?.email) {
+        await lostItem.populate("reportedBy", "name email");
+      }
+
+      const alreadyNotified = await MatchNotification.findOne({
+        lostItemId: lostItem._id,
+        foundItemId: foundItem._id,
+      });
+      if (alreadyNotified) continue;
+
+      await MatchNotification.create({
+        lostItemId: lostItem._id,
+        foundItemId: foundItem._id,
+        notifiedUser: lostItem.reportedBy._id,
+        score,
+      });
+
+      await sendMatchEmail({
+        to: lostItem.reportedBy.email,
+        userName: lostItem.reportedBy.name,
+        lostItemName: lostItem.itemName,
+        foundItemName: foundItem.itemName,
+        score: normalizeScore(score), // ✅ Same score, same format
+        foundItemId: foundItem._id,
+      });
+
+      console.log(`✅ Email sent to ${lostItem.reportedBy.email} — score: ${normalizeScore(score)}%`);
+    }
+  } catch (err) {
+    console.error("❌ notifyLostUsersOnNewFound error:", err.message);
+  }
+}
+
+// ✅ Called when NEW Lost item posted → notify found item reporters
+async function notifyFoundUsersOnNewLost(lostItem, precomputedMatches = null) {
+  try {
+    let allMatches = precomputedMatches; // ✅ Route se aaye matches use karo
+
+    // Sirf tab recalculate karo jab matches na aaye
+    if (!allMatches) {
+      allMatches = await matchLostWithFound(
+        lostItem.tags,
+        lostItem.category,
+        lostItem
+      );
+    }
+
+    for (const match of allMatches) {
+      const foundItem = match.item;
+      const score = match.hybridScore;
+
+      if (score < SCORE_THRESHOLD) continue;
+      if (match.embeddingSim < 0.45) continue;
+
+      // populate karo agar email nahi hai
+      if (!foundItem.reportedBy?.email) {
+        await foundItem.populate("reportedBy", "name email");
+      }
+
+      const alreadyNotified = await MatchNotification.findOne({
+        lostItemId: lostItem._id,
+        foundItemId: foundItem._id,
+      });
+      if (alreadyNotified) continue;
+
+      await MatchNotification.create({
+        lostItemId: lostItem._id,
+        foundItemId: foundItem._id,
+        notifiedUser: foundItem.reportedBy._id,
+        score,
+      });
+
+      await sendMatchEmail({
+        to: foundItem.reportedBy.email,
+        userName: foundItem.reportedBy.name,
+        lostItemName: lostItem.itemName,
+        foundItemName: foundItem.itemName,
+        score: normalizeScore(score), // ✅ Same score, same format
+        foundItemId: foundItem._id,
+      });
+
+      console.log(`✅ Email sent to ${foundItem.reportedBy.email} — score: ${normalizeScore(score)}%`);
+    }
+  } catch (err) {
+    console.error("❌ notifyFoundUsersOnNewLost error:", err.message);
+  }
+}
+
+module.exports = { notifyLostUsersOnNewFound, notifyFoundUsersOnNewLost };
+
+/*
+const LostItem = require("../model/LostItem");
+const FoundItem = require("../model/FoundItem");
+const MatchNotification = require("../model/MatchNotification");
+const sendMatchEmail = require("./sendMatchEmail");
+const { matchLostWithFound, matchFoundWithLost } = require("./matchItems");
+
+const SCORE_THRESHOLD = 0.55;
 async function notifyLostUsersOnNewFound(foundItem) {
   try {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -22,23 +146,22 @@ async function notifyLostUsersOnNewFound(foundItem) {
       const matches = await matchLostWithFound(
         lostItem.tags,
         lostItem.category,
-        lostItem
+        lostItem,
       );
-
       console.log(`📊 Matches for "${lostItem.itemName}": ${matches.length}`);
 
       const thisMatch = matches.find(
-        (m) => m.item._id.toString() === foundItem._id.toString()
+        (m) => m.item._id.toString() === foundItem._id.toString(),
       );
 
       console.log(
-        `🎯 Score for "${lostItem.itemName}": hybridScore=${thisMatch?.hybridScore} embeddingSim=${thisMatch?.embeddingSim}`
+        `🎯 Score for "${lostItem.itemName}": hybridScore=${thisMatch?.hybridScore} embeddingSim=${thisMatch?.embeddingSim}`,
       );
 
       if (!thisMatch) continue;
       if (thisMatch.hybridScore < SCORE_THRESHOLD) continue;
-     // if (thisMatch.embeddingSim < 0.2) continue;
-if (thisMatch.embeddingSim < 0.45) continue;
+
+      if (thisMatch.embeddingSim < 0.45) continue;
       const alreadyNotified = await MatchNotification.findOne({
         lostItemId: lostItem._id,
         foundItemId: foundItem._id,
@@ -62,7 +185,7 @@ if (thisMatch.embeddingSim < 0.45) continue;
       });
 
       console.log(
-        `✅ Match email sent to ${lostItem.reportedBy.email} for lost item: ${lostItem.itemName}`
+        `✅ Match email sent to ${lostItem.reportedBy.email} for lost item: ${lostItem.itemName}`,
       );
     }
   } catch (err) {
@@ -70,15 +193,13 @@ if (thisMatch.embeddingSim < 0.45) continue;
   }
 }
 
-// Called when NEW Lost item posted → notify found item reporters
 async function notifyFoundUsersOnNewLost(lostItem) {
   try {
-    //just old 30 days reports ko email jaya gi
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const foundItems = await FoundItem.find({
       status: "found",
       category: lostItem.category,
-       createdAt: { $gte: thirtyDaysAgo },
+      createdAt: { $gte: thirtyDaysAgo },
     }).populate("reportedBy", "name email");
 
     console.log(`🔍 Filtered found items: ${foundItems.length}`);
@@ -87,23 +208,23 @@ async function notifyFoundUsersOnNewLost(lostItem) {
       const matches = await matchFoundWithLost(
         foundItem.tags,
         foundItem.category,
-        foundItem
+        foundItem,
       );
 
       console.log(`📊 Matches for "${foundItem.itemName}": ${matches.length}`);
 
       const thisMatch = matches.find(
-        (m) => m.item._id.toString() === lostItem._id.toString()
+        (m) => m.item._id.toString() === lostItem._id.toString(),
       );
 
       console.log(
-        `🎯 Score for "${foundItem.itemName}": hybridScore=${thisMatch?.hybridScore} embeddingSim=${thisMatch?.embeddingSim}`
+        `🎯 Score for "${foundItem.itemName}": hybridScore=${thisMatch?.hybridScore} embeddingSim=${thisMatch?.embeddingSim}`,
       );
 
       if (!thisMatch) continue;
       if (thisMatch.hybridScore < SCORE_THRESHOLD) continue;
-      //if (thisMatch.embeddingSim < 0.2) continue;
-if (thisMatch.embeddingSim < 0.45) continue;
+
+      if (thisMatch.embeddingSim < 0.45) continue;
       const alreadyNotified = await MatchNotification.findOne({
         lostItemId: lostItem._id,
         foundItemId: foundItem._id,
@@ -127,7 +248,7 @@ if (thisMatch.embeddingSim < 0.45) continue;
       });
 
       console.log(
-        `✅ Match email sent to ${foundItem.reportedBy.email} for found item: ${foundItem.itemName}`
+        `✅ Match email sent to ${foundItem.reportedBy.email} for found item: ${foundItem.itemName}`,
       );
     }
   } catch (err) {
@@ -136,3 +257,4 @@ if (thisMatch.embeddingSim < 0.45) continue;
 }
 
 module.exports = { notifyLostUsersOnNewFound, notifyFoundUsersOnNewLost };
+*/
