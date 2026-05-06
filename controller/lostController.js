@@ -41,7 +41,13 @@ router.post(
       const lostItemData = req.body;
       lostItemData.images = imageLinks;
       lostItemData.reportedBy = req.user.id;
-   
+   const smartData = await buildSmartData(
+  lostItemData,
+  imageLinks,
+  lostItemData.category
+);
+lostItemData.tags = smartData.tags;
+lostItemData.embedding = smartData.embedding;
      {/** 
       const textTags = generateTextTags(lostItemData);
       let allTags = [...textTags];
