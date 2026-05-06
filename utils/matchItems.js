@@ -4,64 +4,188 @@ const FoundItem = require("../model/FoundItem");
 // ============================================
 // ITEM TYPE GROUPS — All Categories
 // ============================================
+
 const ITEM_TYPE_GROUPS = [
-  // Electronics
-  ["laptop", "macbook", "notebook", "chromebook", "thinkpad", "lenovo", "dell laptop", "hp laptop"],
-  ["phone", "iphone", "samsung", "mobile", "smartphone", "android", "oneplus", "pixel", "redmi", "oppo", "vivo"],
-  ["airpod", "earphone", "earbud", "headphone", "headset", "buds"],
-  ["powerbank", "power bank", "power-bank", "portable charger", "battery bank"],
-  ["tablet", "ipad", "tab ", "surface pro"],
-  ["watch", "smartwatch", "apple watch", "smart watch"],
-  ["camera", "dslr", "canon", "nikon", "sony camera"],
-  ["charger", "adapter", "charging cable"],
-  ["calculator"],
 
-  // Bags
-  ["backpack", "rucksack", "school bag"],
-  ["handbag", "hand bag", "tote"],
-  ["suitcase", "luggage", "trolley bag", "travel bag"],
-  ["laptop bag", "laptop case", "sleeve"],
-  ["shoulder bag", "sling bag", "crossbody"],
-  ["gym bag", "duffle", "duffel"],
+  // ═══════════════════════════════
+  // ELECTRONICS
+  // ═══════════════════════════════
+  ["laptop", "macbook", "notebook", "chromebook", "thinkpad", "lenovo", "dell", "hp laptop", "asus laptop", "acer", "surface laptop", "gaming laptop", "ultrabook"],
+  ["phone", "iphone", "samsung", "mobile", "smartphone", "android", "oneplus", "pixel", "redmi", "oppo", "vivo", "huawei", "realme", "nokia", "motorola", "xiaomi", "infinix", "tecno"],
+  ["airpod", "earphone", "earbud", "headphone", "headset", "buds", "earpiece", "wireless earphone", "tws", "jbl earphone", "sony earphone"],
+  ["powerbank", "power bank", "power-bank", "portable charger", "battery bank", "anker", "baseus"],
+  ["tablet", "ipad", "tab", "surface pro", "kindle", "e-reader", "galaxy tab"],
+  ["watch", "smartwatch", "apple watch", "smart watch", "fitbit", "garmin", "mi band", "fitness band", "wristband"],
+  ["camera", "dslr", "canon", "nikon", "sony camera", "fujifilm", "gopro", "action camera", "webcam", "digital camera"],
+  ["charger", "adapter", "charging cable", "usb cable", "type c cable", "lightning cable", "power adapter", "travel adapter"],
+  ["calculator", "scientific calculator", "casio", "fx calculator"],
+  ["keyboard", "mechanical keyboard", "wireless keyboard", "bluetooth keyboard"],
+  ["mouse", "wireless mouse", "gaming mouse", "touchpad"],
+  ["hard drive", "external drive", "ssd", "usb drive", "flash drive", "pendrive", "pen drive", "memory card", "sd card"],
+  ["speaker", "bluetooth speaker", "jbl", "portable speaker", "mini speaker"],
+  ["remote", "tv remote", "ac remote", "remote control"],
+  ["router", "wifi device", "hotspot device", "modem"],
 
-  // Clothing
-  ["shirt", "t-shirt", "tshirt", "polo"],
-  ["jacket", "coat", "hoodie", "sweater", "sweatshirt", "pullover"],
-  ["trouser", "pants", "jeans", "shalwar"],
-  ["shoes", "sneakers", "boots", "chappal", "sandal", "heels"],
-  ["scarf", "dupatta", "shawl", "stole"],
-  ["cap", "hat", "topi"],
+  // ═══════════════════════════════
+  // BAGS
+  // ═══════════════════════════════
+  ["backpack", "rucksack", "school bag", "university bag", "student bag", "hiking bag"],
+  ["handbag", "hand bag", "tote bag", "tote", "ladies bag", "women bag", "purse bag"],
+  ["suitcase", "luggage", "trolley bag", "travel bag", "travel suitcase", "cabin bag"],
+  ["laptop bag", "laptop case", "laptop sleeve", "sleeve", "laptop pouch"],
+  ["shoulder bag", "sling bag", "crossbody", "messenger bag", "side bag"],
+  ["gym bag", "duffle", "duffel", "sports bag", "kit bag"],
+  ["clutch", "evening bag", "party bag", "wristlet"],
+  ["drawstring bag", "string bag", "pouch bag"],
+  ["diaper bag", "baby bag", "nappy bag"],
+  ["camera bag", "photography bag"],
+  ["tool bag", "toolbox bag"],
 
-  // Accessories
-  ["ring", "wedding ring", "engagement ring"],
-  ["necklace", "chain", "locket", "pendant"],
-  ["bracelet", "bangle", "kara"],
-  ["glasses", "spectacles", "sunglasses", "eyeglasses"],
-  ["belt"],
-  ["earring", "ear ring", "stud"],
+  // ═══════════════════════════════
+  // CLOTHING
+  // ═══════════════════════════════
+  ["shirt", "t-shirt", "tshirt", "polo", "formal shirt", "casual shirt", "dress shirt", "kurta", "kameez"],
+  ["jacket", "coat", "hoodie", "sweater", "sweatshirt", "pullover", "windbreaker", "blazer", "waistcoat", "vest", "fleece"],
+  ["trouser", "pants", "jeans", "shalwar", "trousers", "chinos", "cargo pants", "sweatpants", "track pants"],
+  ["shoes", "sneakers", "boots", "chappal", "sandal", "heels", "loafers", "oxfords", "moccasins", "slippers", "flip flops", "khussa", "sports shoes", "running shoes"],
+  ["scarf", "dupatta", "shawl", "stole", "muffler", "neck warmer"],
+  ["cap", "hat", "topi", "beanie", "beret", "sun hat", "bucket hat", "baseball cap", "turban"],
+  ["dress", "frock", "gown", "maxi", "mini dress", "shalwar kameez", "suit"],
+  ["abaya", "hijab", "niqab", "burqa", "prayer clothes"],
+  ["uniform", "school uniform", "office uniform", "sports uniform"],
+  ["socks", "stockings", "tights", "leggings"],
+  ["gloves", "winter gloves", "hand gloves", "mittens"],
+  ["belt", "leather belt", "fabric belt"],
+  ["tie", "necktie", "bow tie"],
+  ["raincoat", "poncho", "waterproof jacket"],
 
-  // Books / Stationery
-  ["book", "novel", "textbook", "course book"],
-  ["notebook", "diary", "journal", "copy", "register"],
-  ["pen", "pencil", "marker", "highlighter"],
+  // ═══════════════════════════════
+  // ACCESSORIES
+  // ═══════════════════════════════
+  ["ring", "wedding ring", "engagement ring", "finger ring", "gold ring", "silver ring"],
+  ["necklace", "chain", "locket", "pendant", "choker", "gold chain", "silver chain"],
+  ["bracelet", "bangle", "kara", "wristband", "charm bracelet", "gold bracelet"],
+  ["glasses", "spectacles", "sunglasses", "eyeglasses", "reading glasses", "prescription glasses", "goggles"],
+  ["earring", "ear ring", "stud", "hoop earring", "jhumka", "ear stud"],
+  ["brooch", "pin", "badge pin", "lapel pin"],
+  ["hair clip", "hairpin", "hair band", "scrunchie", "hair tie", "bobby pin"],
+  ["umbrella", "rain umbrella", "sun umbrella", "parasol"],
+  ["wallet", "billfold", "money clip", "card holder", "leather wallet"],
+  ["purse", "coin purse", "mini wallet"],
+  ["keychain", "key ring", "key holder", "key fob"],
+  ["watch strap", "watch band"],
+  ["luggage tag", "bag tag", "travel tag"],
 
-  // Keys
-  ["car key", "vehicle key", "motorcycle key", "bike key"],
-  ["house key", "home key", "room key", "locker key"],
-  ["university key", "office key"],
+  // ═══════════════════════════════
+  // BOOKS & STATIONERY
+  // ═══════════════════════════════
+  ["book", "novel", "textbook", "course book", "reference book", "guidebook", "manual"],
+  ["notebook", "diary", "journal", "copy", "register", "spiral notebook", "composition book"],
+  ["pen", "ballpoint", "gel pen", "fountain pen", "rollerball"],
+  ["pencil", "mechanical pencil", "graphite pencil", "colored pencil"],
+  ["marker", "highlighter", "whiteboard marker", "permanent marker", "sharpie"],
+  ["eraser", "rubber eraser", "correction pen", "whitener", "liquid paper"],
+  ["ruler", "scale", "measuring tape", "protractor", "compass"],
+  ["stapler", "staple remover", "hole punch", "paper clip", "binder clip"],
+  ["folder", "file folder", "document folder", "binder", "portfolio"],
+  ["sticky notes", "post it", "memo pad", "notepad"],
+  ["glue", "glue stick", "tape", "sellotape", "scotch tape"],
+  ["scissors", "cutter", "box cutter", "craft knife"],
+  ["sketch book", "drawing book", "art book", "coloring book"],
+  ["geometry box", "math set", "compass box"],
 
-  // ID / Documents
-  ["id card", "identity card", "student card", "cnic", "national id"],
-  ["passport"],
-  ["driving license", "licence"],
-  ["atm card", "debit card", "credit card", "bank card"],
+  // ═══════════════════════════════
+  // KEYS
+  // ═══════════════════════════════
+  ["car key", "vehicle key", "automobile key", "auto key", "car remote key"],
+  ["motorcycle key", "bike key", "scooter key", "motorbike key"],
+  ["house key", "home key", "apartment key", "flat key", "door key"],
+  ["room key", "hostel key", "hotel key", "locker key", "cabinet key"],
+  ["office key", "university key", "lab key", "classroom key"],
+  ["safe key", "vault key", "mailbox key"],
 
-  // Sports Equipment
-  ["bat", "cricket bat"],
-  ["ball", "football", "cricket ball", "basketball"],
-  ["racket", "badminton", "tennis racket"],
-  ["gloves", "boxing gloves", "batting gloves"],
-  ["helmet"],
+  // ═══════════════════════════════
+  // ID CARDS & DOCUMENTS
+  // ═══════════════════════════════
+  ["id card", "identity card", "student id", "student card", "university card", "college card"],
+  ["cnic", "national id", "national identity card", "nadra card", "computerized id"],
+  ["passport", "travel document", "passport book"],
+  ["driving license", "driving licence", "driver license", "dl card"],
+  ["atm card", "debit card", "credit card", "bank card", "visa card", "mastercard"],
+  ["library card", "membership card", "loyalty card", "club card"],
+  ["health card", "medical card", "insurance card", "sehat card"],
+  ["employee card", "staff card", "work id", "office id"],
+  ["certificate", "degree", "diploma", "result card", "transcript"],
+  ["boarding pass", "flight ticket", "train ticket", "bus ticket"],
+
+  // ═══════════════════════════════
+  // SPORTS EQUIPMENT
+  // ═══════════════════════════════
+  ["cricket bat", "bat"],
+  ["football", "soccer ball", "futsal ball"],
+  ["cricket ball", "tennis ball", "rubber ball"],
+  ["basketball", "basket ball"],
+  ["volleyball", "volley ball"],
+  ["badminton racket", "tennis racket", "squash racket", "racket", "racquet"],
+  ["boxing gloves", "batting gloves", "cricket gloves", "goalkeeper gloves", "sports gloves"],
+  ["helmet", "cricket helmet", "bike helmet", "cycling helmet", "safety helmet"],
+  ["shin guard", "knee pad", "elbow pad", "protective gear"],
+  ["swimming goggles", "swim cap", "swimming cap"],
+  ["yoga mat", "exercise mat", "gym mat"],
+  ["skipping rope", "jump rope"],
+  ["dumbbell", "weight plate", "gym weight"],
+  ["water bottle", "sports bottle", "sipper bottle"],
+  ["protein shaker", "gym shaker", "blender bottle"],
+  ["cycling shoes", "cleats", "sports cleats"],
+  ["jersey", "sports shirt", "kit", "sports uniform"],
+
+  // ═══════════════════════════════
+  // MEDICAL & PERSONAL CARE
+  // ═══════════════════════════════
+  ["medicine", "tablet", "capsule", "pills", "injection", "prescription"],
+  ["glasses case", "spectacle case", "contact lens", "lens case"],
+  ["hearing aid", "ear aid"],
+  ["inhaler", "nebulizer", "asthma pump"],
+  ["crutches", "walking stick", "cane", "wheelchair"],
+  ["first aid kit", "medical kit", "bandage", "plaster"],
+
+  // ═══════════════════════════════
+  // FOOD & CONTAINERS
+  // ═══════════════════════════════
+  ["lunch box", "tiffin", "food container", "meal prep box"],
+  ["thermos", "flask", "vacuum flask", "coffee thermos"],
+  ["water bottle", "drinking bottle", "hydro flask"],
+  ["mug", "travel mug", "coffee mug", "tumbler"],
+
+  // ═══════════════════════════════
+  // MUSICAL INSTRUMENTS
+  // ═══════════════════════════════
+  ["guitar", "acoustic guitar", "electric guitar", "ukulele"],
+  ["violin", "fiddle"],
+  ["flute", "recorder", "wind instrument"],
+  ["harmonica", "mouth organ"],
+  ["drum sticks", "drumsticks", "percussion"],
+  ["piano", "keyboard instrument", "synthesizer"],
+
+  // ═══════════════════════════════
+  // TOOLS & EQUIPMENT
+  // ═══════════════════════════════
+  ["screwdriver", "wrench", "spanner", "pliers", "hammer"],
+  ["drill", "power drill", "electric drill"],
+  ["measuring tape", "tape measure"],
+  ["torch", "flashlight", "headlamp"],
+  ["extension cord", "power strip", "multi plug"],
+  ["tripod", "camera stand", "phone stand", "selfie stick"],
+
+  // ═══════════════════════════════
+  // KIDS & TOYS
+  // ═══════════════════════════════
+  ["toy", "stuffed animal", "teddy bear", "doll", "action figure"],
+  ["lego", "building blocks", "puzzle"],
+  ["remote control car", "rc car", "toy car"],
+  ["board game", "card game", "chess", "checkers"],
+  ["baby stroller", "pram", "pushchair"],
+  ["baby carrier", "sling carrier"],
 ];
 
 // ============================================
