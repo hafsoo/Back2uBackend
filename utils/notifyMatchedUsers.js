@@ -4,7 +4,7 @@ const MatchNotification = require("../model/MatchNotification");
 const sendMatchEmail = require("./sendMatchEmail");
 const { matchLostWithFound, matchFoundWithLost } = require("./matchItems");
 
-const SCORE_THRESHOLD = 0.55;
+const SCORE_THRESHOLD = 0.60;
 
 const normalizeScore = (score) => {
   if (!score) return 0;
@@ -30,7 +30,8 @@ async function notifyLostUsersOnNewFound(foundItem, precomputedMatches = null) {
       const score = match.hybridScore;
 
       if (score < SCORE_THRESHOLD) continue;
-      if (match.embeddingSim < 0.45) continue;
+      if (!match.embeddingSim || match.embeddingSim < 0.45) continue;
+      //if (match.embeddingSim < 0.45) continue;
 
       // populate karo agar email nahi hai
       if (!lostItem.reportedBy?.email) {
@@ -85,8 +86,8 @@ async function notifyFoundUsersOnNewLost(lostItem, precomputedMatches = null) {
       const score = match.hybridScore;
 
       if (score < SCORE_THRESHOLD) continue;
-      if (match.embeddingSim < 0.45) continue;
-
+      //if (match.embeddingSim < 0.45) continue;
+if (!match.embeddingSim || match.embeddingSim < 0.45) continue;
       // populate karo agar email nahi hai
       if (!foundItem.reportedBy?.email) {
         await foundItem.populate("reportedBy", "name email");
@@ -123,45 +124,44 @@ async function notifyFoundUsersOnNewLost(lostItem, precomputedMatches = null) {
 
 module.exports = { notifyLostUsersOnNewFound, notifyFoundUsersOnNewLost };
 
-/*
-const LostItem = require("../model/LostItem");
+{/*const LostItem = require("../model/LostItem");
 const FoundItem = require("../model/FoundItem");
 const MatchNotification = require("../model/MatchNotification");
 const sendMatchEmail = require("./sendMatchEmail");
 const { matchLostWithFound, matchFoundWithLost } = require("./matchItems");
 
 const SCORE_THRESHOLD = 0.55;
-async function notifyLostUsersOnNewFound(foundItem) {
+
+const normalizeScore = (score) => {
+  if (!score) return 0;
+  return Math.round(score * 100);
+};
+
+async function notifyLostUsersOnNewFound(foundItem, precomputedMatches = null) {
   try {
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const lostItems = await LostItem.find({
-      status: "lost",
-      category: foundItem.category,
-      createdAt: { $gte: thirtyDaysAgo },
-    }).populate("reportedBy", "name email");
+    let allMatches = precomputedMatches; 
 
-    console.log(`🔍 Filtered lost items: ${lostItems.length}`);
-
-    for (const lostItem of lostItems) {
-      const matches = await matchLostWithFound(
-        lostItem.tags,
-        lostItem.category,
-        lostItem,
+    
+    if (!allMatches) {
+      allMatches = await matchFoundWithLost(
+        foundItem.tags,
+        foundItem.category,
+        foundItem
       );
-      console.log(`📊 Matches for "${lostItem.itemName}": ${matches.length}`);
+    }
 
-      const thisMatch = matches.find(
-        (m) => m.item._id.toString() === foundItem._id.toString(),
-      );
+    for (const match of allMatches) {
+      const lostItem = match.item;
+      const score = match.hybridScore;
 
-      console.log(
-        `🎯 Score for "${lostItem.itemName}": hybridScore=${thisMatch?.hybridScore} embeddingSim=${thisMatch?.embeddingSim}`,
-      );
+      if (score < SCORE_THRESHOLD) continue;
+      if (match.embeddingSim < 0.45) continue;
 
-      if (!thisMatch) continue;
-      if (thisMatch.hybridScore < SCORE_THRESHOLD) continue;
+      
+      if (!lostItem.reportedBy?.email) {
+        await lostItem.populate("reportedBy", "name email");
+      }
 
-      if (thisMatch.embeddingSim < 0.45) continue;
       const alreadyNotified = await MatchNotification.findOne({
         lostItemId: lostItem._id,
         foundItemId: foundItem._id,
@@ -172,7 +172,7 @@ async function notifyLostUsersOnNewFound(foundItem) {
         lostItemId: lostItem._id,
         foundItemId: foundItem._id,
         notifiedUser: lostItem.reportedBy._id,
-        score: thisMatch.hybridScore,
+        score,
       });
 
       await sendMatchEmail({
@@ -180,51 +180,43 @@ async function notifyLostUsersOnNewFound(foundItem) {
         userName: lostItem.reportedBy.name,
         lostItemName: lostItem.itemName,
         foundItemName: foundItem.itemName,
-        score: Math.round(thisMatch.hybridScore * 100),
+        score: normalizeScore(score), 
         foundItemId: foundItem._id,
       });
 
-      console.log(
-        `✅ Match email sent to ${lostItem.reportedBy.email} for lost item: ${lostItem.itemName}`,
-      );
+      console.log(`✅ Email sent to ${lostItem.reportedBy.email} — score: ${normalizeScore(score)}%`);
     }
   } catch (err) {
     console.error("❌ notifyLostUsersOnNewFound error:", err.message);
   }
 }
 
-async function notifyFoundUsersOnNewLost(lostItem) {
+
+async function notifyFoundUsersOnNewLost(lostItem, precomputedMatches = null) {
   try {
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const foundItems = await FoundItem.find({
-      status: "found",
-      category: lostItem.category,
-      createdAt: { $gte: thirtyDaysAgo },
-    }).populate("reportedBy", "name email");
+    let allMatches = precomputedMatches; 
 
-    console.log(`🔍 Filtered found items: ${foundItems.length}`);
 
-    for (const foundItem of foundItems) {
-      const matches = await matchFoundWithLost(
-        foundItem.tags,
-        foundItem.category,
-        foundItem,
+    if (!allMatches) {
+      allMatches = await matchLostWithFound(
+        lostItem.tags,
+        lostItem.category,
+        lostItem
       );
+    }
 
-      console.log(`📊 Matches for "${foundItem.itemName}": ${matches.length}`);
+    for (const match of allMatches) {
+      const foundItem = match.item;
+      const score = match.hybridScore;
 
-      const thisMatch = matches.find(
-        (m) => m.item._id.toString() === lostItem._id.toString(),
-      );
+      if (score < SCORE_THRESHOLD) continue;
+      if (match.embeddingSim < 0.45) continue;
 
-      console.log(
-        `🎯 Score for "${foundItem.itemName}": hybridScore=${thisMatch?.hybridScore} embeddingSim=${thisMatch?.embeddingSim}`,
-      );
+      
+      if (!foundItem.reportedBy?.email) {
+        await foundItem.populate("reportedBy", "name email");
+      }
 
-      if (!thisMatch) continue;
-      if (thisMatch.hybridScore < SCORE_THRESHOLD) continue;
-
-      if (thisMatch.embeddingSim < 0.45) continue;
       const alreadyNotified = await MatchNotification.findOne({
         lostItemId: lostItem._id,
         foundItemId: foundItem._id,
@@ -235,7 +227,7 @@ async function notifyFoundUsersOnNewLost(lostItem) {
         lostItemId: lostItem._id,
         foundItemId: foundItem._id,
         notifiedUser: foundItem.reportedBy._id,
-        score: thisMatch.hybridScore,
+        score,
       });
 
       await sendMatchEmail({
@@ -243,13 +235,11 @@ async function notifyFoundUsersOnNewLost(lostItem) {
         userName: foundItem.reportedBy.name,
         lostItemName: lostItem.itemName,
         foundItemName: foundItem.itemName,
-        score: Math.round(thisMatch.hybridScore * 100),
+        score: normalizeScore(score), // ✅ Same score, same format
         foundItemId: foundItem._id,
       });
 
-      console.log(
-        `✅ Match email sent to ${foundItem.reportedBy.email} for found item: ${foundItem.itemName}`,
-      );
+      console.log(`✅ Email sent to ${foundItem.reportedBy.email} — score: ${normalizeScore(score)}%`);
     }
   } catch (err) {
     console.error("❌ notifyFoundUsersOnNewLost error:", err.message);
@@ -257,4 +247,5 @@ async function notifyFoundUsersOnNewLost(lostItem) {
 }
 
 module.exports = { notifyLostUsersOnNewFound, notifyFoundUsersOnNewLost };
-*/
+
+*/}

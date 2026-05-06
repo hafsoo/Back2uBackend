@@ -5,18 +5,13 @@ const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const ErrorHandler = require("../utils/ErrorHandler");
 const { isAuthenticated, isAdmin } = require("../middleware/auth");
 const cloudinary = require("cloudinary");
-const analyzeImage = require("../utils/geminiVision");
-const normalizeTags = require("../utils/normalizeTags");
+//const analyzeImage = require("../utils/geminiVision");
+//const normalizeTags = require("../utils/normalizeTags");
 const { matchLostWithFound } = require("../utils/matchItems");
-
-const generateTextTags = require("../utils/generateTextTags");
-const { generateEmbedding } = require("../utils/generateEmbedding");
-//const detectLabels = require("../utils/clarifaiVision");
-//const detectLabels = require("../utils/geminiVision");
-//const detectLabels = require("../utils/visionRest");
-//const normalizeTags = require("../utils/tagNormalizer");
+//const generateTextTags = require("../utils/generateTextTags");
+//const { generateEmbedding } = require("../utils/generateEmbedding");
 const { notifyFoundUsersOnNewLost } = require("../utils/notifyMatchedUsers");
-
+const buildSmartData = require("../utils/buildSmartEmbedding");
 // 🟢 Report Lost Item
 router.post(
   "/report-lost-item",
@@ -45,74 +40,16 @@ router.post(
 
       const lostItemData = req.body;
       lostItemData.images = imageLinks;
-      // attach logged-in user
       lostItemData.reportedBy = req.user.id;
-
-      // 🧠 AI TAG EXTRACTION (SAFE) for google vision
-      //if (imageLinks.length > 0) {
-      //try {
-      //const aiTags = await detectLabels(imageLinks[0].url);
-      //lostItemData.tags = normalizeTags(aiTags);
-      //} catch (err) {
-      //console.error(
-      //"❌ Vision API Error (Lost):",
-      //err.response?.data || err.message
-      // );
-      //lostItemData.tags = []; // fallback
-      //}
-      //}
-
-      //now with clarfai
-
-      //if (process.env.USE_AI === "true" && imageLinks.length > 0) {
-      //try {
-      //const aiTags = await detectLabels(imageLinks[0].url);
-      //lostItemData.tags = normalizeTags(aiTags);
-      //} catch (err) {
-      //console.error("❌ Clarifai Error:", err.response?.data || err.message);
-      //lostItemData.tags = [];
-      //}
-      //}
-      //by google ai studio
-
-      {
-        /**   if (imageLinks.length > 0) {
-        try {
-          let allTags = [];
-          for (let img of imageLinks) {
-            const aiTags = await analyzeImage(img.url);
-            allTags = allTags.concat(aiTags);
-          }
-          // normalize & remove duplicates by one line
-          // lostItemData.tags = [
-          //  ...new Set(allTags.map((tag) => tag.toLowerCase().trim())),
-          //];
-          const normalizedTags = normalizeTags(allTags, lostItemData.category);
-          lostItemData.tags = normalizedTags;
-        } catch (err) {
-          console.error("❌ Gemini AI Error:", err.message);
-          lostItemData.tags = []; // fallback
-        }
-      } else {
-        // 🆕 NEW LOGIC FOR NO IMAGE
-        const textTags = generateTextTags(lostItemData);
-        lostItemData.tags = textTags;
-      }
-
-      */
-      }
-      ///2 way
-      // 1️⃣ Generate text tags from user input
+   
+     {/** 
       const textTags = generateTextTags(lostItemData);
-
-      // 2️⃣ Initialize combined tags with text tags
       let allTags = [...textTags];
 
-      // 3️⃣ If images exist, generate AI tags and add them
       if (imageLinks.length > 0) {
         try {
           for (let img of imageLinks) {
-            const aiTags = await analyzeImage(img.url); // Gemini AI tags
+            const aiTags = await analyzeImage(img.url); 
             allTags = allTags.concat(aiTags);
           }
         } catch (err) {
@@ -120,11 +57,8 @@ router.post(
         }
       }
 
-      // 4️⃣ Normalize & remove duplicates
+      
       lostItemData.tags = normalizeTags(allTags, lostItemData.category);
-
-      //new embedding semantic
-      // 🔥 Generate semantic embedding from tags + description
       const embeddingText =
         lostItemData.tags.join(" ") + " " + (lostItemData.description || "");
 
@@ -135,25 +69,11 @@ router.post(
         console.error("❌ Embedding Error:", err.message);
         lostItemData.embedding = [];
       }
-
+*/}
       //db save
       const lostItem = await LostItem.create(lostItemData);
 
-      // ✅ ADD THIS — runs in background, doesn't slow response vercel issue
-      //notifyFoundUsersOnNewLost(lostItem).catch(console.error);
-
-      // auto-match score base
-      //const possibleMatches = await matchLostWithFound(
-      //lostItem.tags,
-      //lostItem.category,
-      //lostItem,
-      //);
-      //abhi comment kia
-
-      //const [possibleMatches] = await Promise.all([
-      //matchLostWithFound(lostItem.tags, lostItem.category, lostItem),
-      //notifyFoundUsersOnNewLost(lostItem),
-      //]);
+      
       const possibleMatches = await matchLostWithFound(
         lostItem.tags,
         lostItem.category,

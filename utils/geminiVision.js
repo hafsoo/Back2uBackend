@@ -58,7 +58,13 @@ async function analyzeImage(imageUrl) {
         },
       },
       {
-        text: "Identify the main objects in this image and return short tags only, separated by commas.",
+        text: `You are helping identify lost and found items.
+Look at this image carefully and return ONLY the main item's tags.
+Focus on: object type, color, brand if visible, material, size.
+Do NOT include background, people, or scenery.
+Return maximum 6 tags, comma separated, lowercase only.
+Example output: phone, black, cracked screen, samsung`,
+        //text: "Identify the main objects in this image and return short tags only, separated by commas.",
       },
     ]);
 
@@ -72,15 +78,16 @@ async function analyzeImage(imageUrl) {
       .split(",")
       .map((tag) => tag.trim())
       .filter(Boolean);
-
   } catch (err) {
-    console.error("❌ Gemini AI Error in analyzeImage:", err.response?.data || err.message);
+    console.error(
+      "❌ Gemini AI Error in analyzeImage:",
+      err.response?.data || err.message,
+    );
     return [];
   }
 }
 
 module.exports = analyzeImage;
-
 
 /*
 const { GoogleGenerativeAI } = require("@google/generative-ai");
