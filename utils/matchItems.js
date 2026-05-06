@@ -120,7 +120,7 @@ const thirtyDaysAgo = () => new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
       // matchLostWithFound / matchFoundWithLost
 // Note: this filters >= 0.50 for UI display.
 // Email notification applies a stricter threshold (>= 0.60) in notifyMatchedUsers.js
-      if (scoreObj.hybridScore < 0.50|| scoreObj.embeddingSim < 0.50)
+      if (scoreObj.hybridScore < 0.60|| scoreObj.embeddingSim < 0.65||  scoreObj.normalizedTagScore < 0.15)
         return null;
       return {
         item,
@@ -142,7 +142,7 @@ const thirtyDaysAgo = () => new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const matches = candidates
     .map((item) => {
       const scoreObj = computeHybridScore({ item, inputData: foundItemData });
-      if (scoreObj.hybridScore < 0.50 || scoreObj.embeddingSim < 0.50)
+      if (scoreObj.hybridScore < 0.60 || scoreObj.embeddingSim < 0.65||  scoreObj.normalizedTagScore < 0.15)
         return null;
       return {
         item,

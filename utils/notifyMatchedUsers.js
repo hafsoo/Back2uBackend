@@ -4,7 +4,7 @@ const MatchNotification = require("../model/MatchNotification");
 const sendMatchEmail = require("./sendMatchEmail");
 const { matchLostWithFound, matchFoundWithLost } = require("./matchItems");
 
-const SCORE_THRESHOLD = 0.60;
+const SCORE_THRESHOLD = 0.65;
 
 const normalizeScore = (score) => {
   if (!score) return 0;
