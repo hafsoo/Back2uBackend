@@ -1,6 +1,272 @@
 const LostItem = require("../model/LostItem");
 const FoundItem = require("../model/FoundItem");
 
+// ============================================
+// ITEM TYPE GROUPS — All Categories
+// ============================================
+const ITEM_TYPE_GROUPS = [
+  // Electronics
+  ["laptop", "macbook", "notebook", "chromebook", "thinkpad", "lenovo", "dell laptop", "hp laptop"],
+  ["phone", "iphone", "samsung", "mobile", "smartphone", "android", "oneplus", "pixel", "redmi", "oppo", "vivo"],
+  ["airpod", "earphone", "earbud", "headphone", "headset", "buds"],
+  ["powerbank", "power bank", "power-bank", "portable charger", "battery bank"],
+  ["tablet", "ipad", "tab ", "surface pro"],
+  ["watch", "smartwatch", "apple watch", "smart watch"],
+  ["camera", "dslr", "canon", "nikon", "sony camera"],
+  ["charger", "adapter", "charging cable"],
+  ["calculator"],
+
+  // Bags
+  ["backpack", "rucksack", "school bag"],
+  ["handbag", "hand bag", "tote"],
+  ["suitcase", "luggage", "trolley bag", "travel bag"],
+  ["laptop bag", "laptop case", "sleeve"],
+  ["shoulder bag", "sling bag", "crossbody"],
+  ["gym bag", "duffle", "duffel"],
+
+  // Clothing
+  ["shirt", "t-shirt", "tshirt", "polo"],
+  ["jacket", "coat", "hoodie", "sweater", "sweatshirt", "pullover"],
+  ["trouser", "pants", "jeans", "shalwar"],
+  ["shoes", "sneakers", "boots", "chappal", "sandal", "heels"],
+  ["scarf", "dupatta", "shawl", "stole"],
+  ["cap", "hat", "topi"],
+
+  // Accessories
+  ["ring", "wedding ring", "engagement ring"],
+  ["necklace", "chain", "locket", "pendant"],
+  ["bracelet", "bangle", "kara"],
+  ["glasses", "spectacles", "sunglasses", "eyeglasses"],
+  ["belt"],
+  ["earring", "ear ring", "stud"],
+
+  // Books / Stationery
+  ["book", "novel", "textbook", "course book"],
+  ["notebook", "diary", "journal", "copy", "register"],
+  ["pen", "pencil", "marker", "highlighter"],
+
+  // Keys
+  ["car key", "vehicle key", "motorcycle key", "bike key"],
+  ["house key", "home key", "room key", "locker key"],
+  ["university key", "office key"],
+
+  // ID / Documents
+  ["id card", "identity card", "student card", "cnic", "national id"],
+  ["passport"],
+  ["driving license", "licence"],
+  ["atm card", "debit card", "credit card", "bank card"],
+
+  // Sports Equipment
+  ["bat", "cricket bat"],
+  ["ball", "football", "cricket ball", "basketball"],
+  ["racket", "badminton", "tennis racket"],
+  ["gloves", "boxing gloves", "batting gloves"],
+  ["helmet"],
+];
+
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+function dateDiffInDays(date1, date2) {
+  return Math.abs(
+    (new Date(date1) - new Date(date2)) / (1000 * 60 * 60 * 24)
+  );
+}
+
+function cosineSimilarity(a = [], b = []) {
+  if (!a.length || !b.length || a.length !== b.length) return 0;
+
+  let dot = 0, magA = 0, magB = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    magA += a[i] * a[i];
+    magB += b[i] * b[i];
+  }
+  magA = Math.sqrt(magA);
+  magB = Math.sqrt(magB);
+  if (magA === 0 || magB === 0) return 0;
+  return dot / (magA * magB);
+}
+
+function isSameItemType(inputData, candidate) {
+  const inputName = (inputData.itemName || "").toLowerCase();
+  const candidateName = (candidate.itemName || "").toLowerCase();
+
+  let inputType = null;
+  let candidateType = null;
+
+  for (let i = 0; i < ITEM_TYPE_GROUPS.length; i++) {
+    const group = ITEM_TYPE_GROUPS[i];
+    if (group.some((k) => inputName.includes(k))) inputType = i;
+    if (group.some((k) => candidateName.includes(k))) candidateType = i;
+  }
+
+  // Dono ka type detect hua aur alag hai → filter out
+  if (inputType !== null && candidateType !== null && inputType !== candidateType) {
+    return false;
+  }
+
+  return true;
+}
+
+// ============================================
+// HYBRID SCORE COMPUTATION
+// ============================================
+function computeHybridScore({ item, inputData }) {
+  // 1️⃣ Embedding Similarity (Cosine)
+  const embeddingSim =
+    inputData.embedding?.length && item.embedding?.length
+      ? cosineSimilarity(inputData.embedding, item.embedding)
+      : 0;
+
+  // 2️⃣ Tag Similarity (Jaccard)
+  const inputTags = inputData.tags || [];
+  const itemTags = item.tags || [];
+  const commonTags = inputTags.filter((t) => itemTags.includes(t));
+  const totalUniqueTags = new Set([...inputTags, ...itemTags]).size;
+  const normalizedTagScore =
+    totalUniqueTags === 0 ? 0 : commonTags.length / totalUniqueTags;
+
+  // 3️⃣ Location Score (exact match)
+  let locationScore = 0;
+  if (
+    inputData.location &&
+    item.location &&
+    inputData.location.toLowerCase().trim() ===
+      item.location.toLowerCase().trim()
+  ) {
+    locationScore = 1;
+  }
+
+  // 4️⃣ Date Score
+  let dateScore = 0;
+  const date1 = inputData.dateLost || inputData.dateFound;
+  const date2 = item.dateLost || item.dateFound;
+  if (date1 && date2) {
+    const diff = dateDiffInDays(date1, date2);
+    if (diff <= 1)       dateScore = 1;
+    else if (diff <= 3)  dateScore = 0.7;
+    else if (diff <= 7)  dateScore = 0.4;
+    else if (diff <= 14) dateScore = 0.2;
+    else if (diff <= 30) dateScore = 0.1;
+    else                 dateScore = 0;
+  }
+
+  // 5️⃣ Image Score
+  const imageScore =
+    inputData.images?.length > 0 && item.images?.length > 0 ? 1 : 0;
+
+  // 6️⃣ Weights
+  const weights = {
+    embedding: 0.55,
+    tag:       0.25,
+    location:  0.10,
+    date:      0.05,
+    image:     0.05,
+  };
+
+  // 7️⃣ Final Hybrid Score
+  const hybridScore =
+    embeddingSim        * weights.embedding +
+    normalizedTagScore  * weights.tag +
+    locationScore       * weights.location +
+    dateScore           * weights.date +
+    imageScore          * weights.image;
+
+  return {
+    hybridScore,
+    embeddingSim,
+    normalizedTagScore,
+    locationScore,
+    dateScore,
+    imageScore,
+    commonTags,
+  };
+}
+
+// ============================================
+// 30-DAY WINDOW HELPER
+// ============================================
+const thirtyDaysAgo = () =>
+  new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+// ============================================
+// MATCH LOST → FOUND
+// ============================================
+async function matchLostWithFound(tags, category, lostItemData = {}) {
+  const candidates = await FoundItem.find({
+    category,
+    createdAt: { $gte: thirtyDaysAgo() },
+  });
+
+  const matches = candidates
+    .map((item) => {
+      // ✅ Fix 1: Item type check (phone vs laptop, backpack vs handbag etc.)
+      if (!isSameItemType(lostItemData, item)) return null;
+
+      const scoreObj = computeHybridScore({ item, inputData: lostItemData });
+
+      // ✅ Fix 2: Raised thresholds + minimum tag overlap
+      if (
+        scoreObj.hybridScore       < 0.60 ||
+        scoreObj.embeddingSim      < 0.65 ||
+        scoreObj.normalizedTagScore < 0.15
+      ) return null;
+
+      return {
+        item,
+        matchPercentage: Math.round(scoreObj.hybridScore * 100),
+        ...scoreObj,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.hybridScore - a.hybridScore);
+
+  return matches;
+}
+
+// ============================================
+// MATCH FOUND → LOST
+// ============================================
+async function matchFoundWithLost(tags, category, foundItemData = {}) {
+  const candidates = await LostItem.find({
+    category,
+    createdAt: { $gte: thirtyDaysAgo() },
+  });
+
+  const matches = candidates
+    .map((item) => {
+      // ✅ Fix 1: Item type check
+      if (!isSameItemType(foundItemData, item)) return null;
+
+      const scoreObj = computeHybridScore({ item, inputData: foundItemData });
+
+      // ✅ Fix 2: Raised thresholds + minimum tag overlap
+      if (
+        scoreObj.hybridScore        < 0.60 ||
+        scoreObj.embeddingSim       < 0.65 ||
+        scoreObj.normalizedTagScore < 0.15
+      ) return null;
+
+      return {
+        item,
+        matchPercentage: Math.round(scoreObj.hybridScore * 100),
+        ...scoreObj,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.hybridScore - a.hybridScore);
+
+  return matches;
+}
+
+module.exports = { matchLostWithFound, matchFoundWithLost };
+
+{/** yeh sahi hn
+
+  const LostItem = require("../model/LostItem");
+const FoundItem = require("../model/FoundItem");
+
 function dateDiffInDays(date1, date2) {
   return Math.abs(
     (new Date(date1) - new Date(date2)) / (1000 * 60 * 60 * 24)
@@ -157,6 +423,7 @@ const thirtyDaysAgo = () => new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 }
 
 module.exports = { matchLostWithFound, matchFoundWithLost };
+*/}
 
 {/*const LostItem = require("../model/LostItem");
 const FoundItem = require("../model/FoundItem");
